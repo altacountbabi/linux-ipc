@@ -28,7 +28,7 @@ impl IpcChannel {
         })
     }
 
-    pub fn bind(path: &str) -> io::Result<Self> {
+    pub fn connect(path: &str) -> io::Result<Self> {
         let stream = Some(UnixStream::connect(path)?);
 
         Ok(Self {
@@ -39,22 +39,22 @@ impl IpcChannel {
         })
     }
 
-    fn connect(&mut self) -> io::Result<&mut UnixStream> {
+    fn get_stream(&mut self) -> io::Result<&mut UnixStream> {
         if self.stream.is_none() {
             let stream = UnixStream::connect(&self.socket_path)?;
             self.stream = Some(stream);
         }
-
-        Ok(self.stream.as_mut().unwrap())
+        self.stream.as_mut().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::NotConnected, "Failed to connect to stream")
+        })
     }
 
     pub fn send<T: Serialize>(&mut self, value: T) -> io::Result<Option<String>> {
-        let stream = self.connect()?;
+        let stream = self.get_stream()?;
         let binary =
             bincode::serialize(&value).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
         stream.write_all(&binary)?;
-
         stream.flush()?;
         stream.shutdown(std::net::Shutdown::Write)?;
 
@@ -70,19 +70,18 @@ impl IpcChannel {
         }
     }
 
-    pub fn receive<T: DeserializeOwned + Debug>(
-        &mut self,
-    ) -> io::Result<impl DeserializeOwned + Debug> {
-        let listener = self.listener.as_mut().unwrap();
+    pub fn receive<T: DeserializeOwned + Debug>(&mut self) -> io::Result<T> {
+        let listener = self
+            .listener
+            .as_mut()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotConnected, "Listener not found"))?;
         let mut stream = listener.accept()?.0;
 
         let mut buffer = Vec::new();
         stream.read_to_end(&mut buffer)?;
 
-        match bincode::deserialize::<T>(&buffer) {
-            Ok(data) => Ok(data),
-            Err(err) => Err(io::Error::new(io::ErrorKind::InvalidData, err)),
-        }
+        bincode::deserialize::<T>(&buffer)
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
     }
 }
 
