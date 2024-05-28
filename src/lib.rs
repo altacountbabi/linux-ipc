@@ -49,21 +49,17 @@ impl IpcChannel {
     }
 
     pub fn send<T: Serialize>(&mut self, value: T) -> io::Result<Option<String>> {
-        let stream = self.connect().expect("Failed to connect to stream");
+        let stream = self.connect()?;
         let binary =
             bincode::serialize(&value).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-        stream
-            .write_all(&binary)
-            .expect("Failed to write to buffer");
+        stream.write_all(&binary)?;
 
         stream.flush()?;
         stream.shutdown(std::net::Shutdown::Write)?;
 
         let mut response = String::new();
-        stream
-            .read_to_string(&mut response)
-            .expect("Failed to read response from server");
+        stream.read_to_string(&mut response)?;
 
         self.stream = None;
 
@@ -81,7 +77,7 @@ impl IpcChannel {
         let mut stream = listener.accept()?.0;
 
         let mut buffer = Vec::new();
-        stream.read_to_end(&mut buffer).unwrap();
+        stream.read_to_end(&mut buffer)?;
 
         match bincode::deserialize::<T>(&buffer) {
             Ok(data) => Ok(data),
@@ -93,7 +89,7 @@ impl IpcChannel {
 impl Drop for IpcChannel {
     fn drop(&mut self) {
         if !self.is_client {
-            fs::remove_file(&self.socket_path).expect("Failed to delete socket file");
+            fs::remove_file(&self.socket_path).ok();
         }
     }
 }
