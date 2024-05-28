@@ -6,7 +6,6 @@ edition = "2021"
 authors = ["altacountbabi <https://github.com/altacountbabi>"]
 repository = "https://github.com/altacountbabi/linux-ipc"
 license = "GPL-3.0-only"
-license-file = "LICENSE"
 keywords = ["ipc", "linux"]
 include = ["src/**/*", "Cargo.toml", "README.md", "examples/**/*"]
 exclude = ["target/", ".git/", "Cargo.lock"]
