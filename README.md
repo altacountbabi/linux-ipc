@@ -6,7 +6,7 @@ Linux IPC is a high-level Inter-Process Communication (IPC) library designed spe
 
 - **Simplified API:** This library offers a straightforward API for creating, connecting to, sending data and receiving data from Unix domain sockets, making IPC implementation hassle-free.
   
-- **Client-Server Architecture:** The library supports both client and server roles, enabling developers to establish communication channels between processes in a flexible and scalable manner.
+- **Client-Server Architecture:** The library supports both client and server roles, enabling you to establish communication channels between processes in a flexible and scalable manner.
   
 - **Efficient Data Serialization:** This library uses serde and bincode for efficient serialization and deserialization of data, allowing you to send more complicated data structures over IPC.
 
