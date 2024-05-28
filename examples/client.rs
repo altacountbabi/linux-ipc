@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(dead_code)]
 struct Post {
-    pub title: String,
-    pub body: String,
+    title: String,
+    body: String,
 }
 
 impl Post {
