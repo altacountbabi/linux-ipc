@@ -84,13 +84,7 @@ impl IpcChannel {
         stream.read_to_end(&mut buffer).unwrap();
 
         match bincode::deserialize::<T>(&buffer) {
-            Ok(data) => {
-                stream
-                    .write_all(b"Received binary data\n")
-                    .expect("Failed to write to stream");
-
-                Ok(data)
-            }
+            Ok(data) => Ok(data),
             Err(err) => Err(io::Error::new(io::ErrorKind::InvalidData, err)),
         }
     }
