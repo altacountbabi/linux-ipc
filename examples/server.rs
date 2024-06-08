@@ -19,7 +19,7 @@ fn main() {
             content: response.name,
         };
 
-        println!("\nSending: {:#?}", to_send);
+        println!("Sending: {:#?}", to_send);
 
         reply(to_send).expect("Failed to reply to client");
     }

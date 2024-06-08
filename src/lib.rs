@@ -62,6 +62,8 @@ impl IpcChannel {
         let mut buffer = Vec::new();
         stream.read_to_end(&mut buffer)?;
 
+        self.stream = None;
+
         if buffer.is_empty() {
             return Ok(None);
         }

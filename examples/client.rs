@@ -11,16 +11,19 @@ struct Test {
 fn main() {
     let arg = &env::args().collect::<Vec<String>>()[1..].join(" ");
     let mut channel = IpcChannel::connect("/tmp/example.sock").expect("Failed to create channel");
-    let test = Test {
-        name: "test".to_string(),
-        content: arg.to_string(),
-    };
 
-    println!("Sending: {:#?}", test);
+    for _ in 0..2 {
+        let test = Test {
+            name: "test".to_string(),
+            content: arg.to_string(),
+        };
 
-    let response = channel.send::<_, Test>(test).expect("Failed to send message");
+        println!("Sending: {:#?}", test);
 
-    if let Some(response) = response {
-        println!("\nReceived: {:#?}", response);
+        let response = channel.send::<_, Test>(test).expect("Failed to send message");
+
+        if let Some(response) = response {
+            println!("Received: {:#?}", response);
+        }
     }
 }
