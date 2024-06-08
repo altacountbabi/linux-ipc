@@ -1,12 +1,26 @@
 use linux_ipc::IpcChannel;
+use serde::{Deserialize, Serialize};
 use std::env;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Test {
+    pub name: String,
+    pub content: String,
+}
 
 fn main() {
     let arg = &env::args().collect::<Vec<String>>()[1..].join(" ");
     let mut channel = IpcChannel::connect("/tmp/example.sock").expect("Failed to create channel");
-    let response = channel.send(arg).expect("Failed to send message");
+    let test = Test {
+        name: "test".to_string(),
+        content: arg.to_string(),
+    };
+
+    println!("Sending: {:#?}", test);
+
+    let response = channel.send::<_, Test>(test).expect("Failed to send message");
 
     if let Some(response) = response {
-        print!("{}\n", response);
+        println!("\nReceived: {:#?}", response);
     }
 }

@@ -51,7 +51,7 @@ impl IpcChannel {
             .ok_or_else(|| io::Error::new(io::ErrorKind::NotConnected, "Failed to connect to stream"))
     }
 
-    pub fn send<T: Serialize>(&mut self, value: T) -> io::Result<Option<String>> {
+    pub fn send<T: Serialize, R: DeserializeOwned + Debug>(&mut self, value: T) -> io::Result<Option<R>> {
         let stream = self.get_stream()?;
         let binary = bincode::serialize(&value).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
@@ -59,14 +59,16 @@ impl IpcChannel {
         stream.flush()?;
         stream.shutdown(std::net::Shutdown::Write)?;
 
-        let mut response = String::new();
-        stream.read_to_string(&mut response)?;
+        let mut buffer = Vec::new();
+        stream.read_to_end(&mut buffer)?;
 
-        if response.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(response))
+        if buffer.is_empty() {
+            return Ok(None);
         }
+
+        let response: R = bincode::deserialize(&buffer).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
+
+        Ok(Some(response))
     }
 
     pub fn receive<T: DeserializeOwned + Debug, R: Serialize>(&mut self) -> io::Result<(T, ReplyFn<R>)> {
